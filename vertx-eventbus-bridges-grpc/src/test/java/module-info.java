@@ -1,7 +1,7 @@
-open module io.vertx.tests.eventbus.bridge.grpc {
+open module io.vertx.tests.eventbusbridge.grpc {
     requires io.vertx.core;
-    requires io.vertx.eventbusbridge;
-    requires io.vertx.eventbus.bridge.grpc;
+    requires io.vertx.eventbusbridge.common;
+    requires io.vertx.eventbusbridge.grpc;
 
     requires com.google.protobuf;
     requires com.google.protobuf.util;
@@ -9,5 +9,6 @@ open module io.vertx.tests.eventbus.bridge.grpc {
     requires io.vertx.grpc.common;
 
     requires junit;
+    requires assertj.core;
     requires io.vertx.testing.unit;
 }

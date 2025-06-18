@@ -1,11 +1,11 @@
-module io.vertx.eventbus.bridge.grpc {
+module io.vertx.eventbusbridge.grpc {
 
   requires static io.vertx.codegen.api;
   requires static io.vertx.codegen.json;
 
   requires io.vertx.core;
   requires io.vertx.core.logging;
-  requires io.vertx.eventbusbridge;
+  requires io.vertx.eventbusbridge.common;
   requires io.vertx.grpc.server;
   requires io.vertx.grpc.common;
   requires com.google.protobuf;
