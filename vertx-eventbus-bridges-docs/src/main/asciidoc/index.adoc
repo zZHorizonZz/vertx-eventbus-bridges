@@ -3,8 +3,10 @@
 Vert.x gRPC EventBus Bridge is a gRPC bridge to Vert.x EventBus.
 To use this project, add the following dependency to the _dependencies_ section of your build descriptor:
 
-Maven (in your `pom.xml`):
-
+[tabs]
+====
+Maven::
++
 [source,xml,subs="+attributes"]
 ----
 <dependency>
@@ -14,12 +16,13 @@ Maven (in your `pom.xml`):
 </dependency>
 ----
 
-Gradle (in your `build.gradle` file):
-
+Gradle::
++
 [source,groovy,subs="+attributes"]
 ----
 compile '${maven.groupId}:${maven.artifactId}:${maven.version}'
 ----
+====
 
 The gRPC EventBus Bridge is built on top of gRPC, meaning that any application that can create gRPC clients can interact with a remote Vert.x instance via its event bus.
 The main use case for the gRPC bridge is for applications that need a standardized, high-performance, and language-agnostic way to communicate with a Vert.x EventBus. gRPC provides a modern, open-source RPC framework that uses HTTP/2 for transport, Protocol Buffers as the interface description language.
