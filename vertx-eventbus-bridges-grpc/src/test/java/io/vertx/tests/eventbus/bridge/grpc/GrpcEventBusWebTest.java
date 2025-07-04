@@ -69,9 +69,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     this.client = vertx.createHttpClient(options);
 
     ping().onComplete(res -> {
-      if (res.succeeded()) {
-        System.out.println("[TEST] Ping successful");
-      } else {
+      if (!res.succeeded()) {
         context.fail("Ping failed: " + res.cause().getMessage());
       }
     });
@@ -84,13 +82,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     Async async = context.async();
 
     if (client != null) {
-      client.close().onComplete(v -> {
-        System.out.println("[TEST] Client closed");
-        vertx.close().onComplete(context.asyncAssertSuccess(h -> {
-          System.out.println("[TEST] Vert.x closed");
-          async.complete();
-        }));
-      });
+      client.close().onComplete(v -> vertx.close().onComplete(context.asyncAssertSuccess(h -> async.complete())));
     }
   }
 
@@ -102,8 +94,6 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     JsonObject request = new JsonObject().put("value", "Vert.x");
 
     request("hello", request, 5000).onSuccess(response -> {
-      System.out.println("[TEST] Received response: " + response);
-
       // Verify the response
       context.assertTrue(response.containsKey("value"));
       context.assertEquals("Hello Vert.x", response.getString("value"));
@@ -126,8 +116,6 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
       .put("nested", new JsonObject().put("key", "value"));
 
     request("echo", request, 5000).onSuccess(response -> {
-      System.out.println("[TEST] Received echo response: " + response);
-
       context.assertEquals(request.getString("string"), response.getString("string"));
       context.assertEquals(request.getInteger("number"), response.getInteger("number"));
       context.assertEquals(request.getBoolean("boolean"), response.getBoolean("boolean"));
@@ -147,10 +135,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
 
     publish("restricted-address", message)
       .onSuccess(v -> context.fail("Expected publish to fail, but it succeeded"))
-      .onFailure(err -> {
-        System.out.println("[TEST] Publish to restricted address failed as expected: " + err.getMessage());
-        async.complete();
-      });
+      .onFailure(err -> async.complete());
 
     async.awaitSuccess(5000);
   }
@@ -162,16 +147,11 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     String address = "test-address";
 
     subscribe(address).onSuccess(buffer -> {
-      System.out.println("[TEST] Subscription successful");
-
       // Simulate sending a message to the subscribed address
       vertx.eventBus().send(address, new JsonObject().put("key", "value"));
 
       // Wait for the message to be received
-      vertx.setTimer(1000, id -> {
-        System.out.println("[TEST] Received message on subscribed address");
-        async.complete();
-      });
+      vertx.setTimer(1000, id -> async.complete());
     }).onFailure(err -> context.fail("Subscription failed: " + err.getMessage()));
 
     async.awaitSuccess(5000);
@@ -240,7 +220,6 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
                   len = trailer.getInt(1);
                   assertEquals(STATUS_OK, trailer.getBuffer(PREFIX_SIZE, PREFIX_SIZE + len).toString());
 
-                  System.out.println("[WEB CLIENT] Received response from " + address);
                   promise.complete(GrpcEventBusBridgeTestBase.structToJson(eventMessage.getBody()));
                 } catch (Exception e) {
                   promise.fail("Failed to parse response: " + e.getMessage());
@@ -248,19 +227,12 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
               });
             } else {
               String error = "HTTP error: " + response.statusCode() + " " + response.statusMessage();
-              System.out.println("[WEB CLIENT] Failed to get response from " + address + ": " + error);
               promise.fail(error);
             }
           })
-          .onFailure(err -> {
-            System.out.println("[WEB CLIENT] Failed to get response from " + address + ": " + err.getMessage());
-            promise.fail(err);
-          });
+          .onFailure(promise::fail);
       })
-      .onFailure(err -> {
-        System.out.println("[WEB CLIENT] Failed to create request: " + err.getMessage());
-        promise.fail(err);
-      });
+      .onFailure(promise::fail);
 
     return promise.future();
   }
@@ -279,23 +251,15 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
         return httpRequest.send(encode(request))
           .onSuccess(response -> {
             if (response.statusCode() == 200 && !response.headers().contains(GRPC_STATUS)) {
-              System.out.println("[WEB CLIENT] Message published to " + address);
               promise.complete();
             } else {
               String error = "HTTP error: " + response.statusCode() + " " + response.statusMessage();
-              System.out.println("[WEB CLIENT] Failed to publish message to " + address + ": " + error);
               promise.fail(error);
             }
           })
-          .onFailure(err -> {
-            System.out.println("[WEB CLIENT] Failed to publish message to " + address + ": " + err.getMessage());
-            promise.fail(err);
-          });
+          .onFailure(promise::fail);
       })
-      .onFailure(err -> {
-        System.out.println("[WEB CLIENT] Failed to create request: " + err.getMessage());
-        promise.fail(err);
-      });
+      .onFailure(promise::fail);
 
     return promise.future();
   }
@@ -314,24 +278,16 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
           .onSuccess(response -> {
             if (response.statusCode() == 200) {
               response.body().onSuccess(buffer -> {
-                System.out.println("[WEB CLIENT] Subscription successful");
                 promise.complete(decodeBody(buffer));
               });
             } else {
               String error = "HTTP error: " + response.statusCode() + " " + response.statusMessage();
-              System.out.println("[WEB CLIENT] Subscription failed: " + error);
               promise.fail(error);
             }
           })
-          .onFailure(err -> {
-            System.out.println("[WEB CLIENT] Subscription failed: " + err.getMessage());
-            promise.fail(err);
-          });
+          .onFailure(promise::fail);
       })
-      .onFailure(err -> {
-        System.out.println("[WEB CLIENT] Failed to create request: " + err.getMessage());
-        promise.fail(err);
-      });
+      .onFailure(promise::fail);
 
     return promise.future();
   }
@@ -344,23 +300,15 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
         return httpRequest.send(encode(Empty.getDefaultInstance()))
           .onSuccess(response -> {
             if (response.statusCode() == 200) {
-              System.out.println("[WEB CLIENT] Ping successful");
               promise.complete();
             } else {
               String error = "HTTP error: " + response.statusCode() + " " + response.statusMessage();
-              System.out.println("[WEB CLIENT] Ping failed: " + error);
               promise.fail(error);
             }
           })
-          .onFailure(err -> {
-            System.out.println("[WEB CLIENT] Ping failed: " + err.getMessage());
-            promise.fail(err);
-          });
+          .onFailure(promise::fail);
       })
-      .onFailure(err -> {
-        System.out.println("[WEB CLIENT] Failed to create request: " + err.getMessage());
-        promise.fail(err);
-      });
+      .onFailure(promise::fail);
 
     return promise.future();
   }

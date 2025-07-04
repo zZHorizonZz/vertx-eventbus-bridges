@@ -309,7 +309,6 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       lastMessageTime.set(currentTime);
 
       int count = messageCount.incrementAndGet();
-      System.out.println("[DEBUG] Received message " + count + " of " + expectedMessages);
 
       if (count >= expectedMessages) {
         long timeDifference = lastMessageTime.get() - firstMessageTime.get();
