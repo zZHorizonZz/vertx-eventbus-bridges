@@ -10,13 +10,10 @@ import io.vertx.ext.bridge.BridgeOptions;
 /**
  * gRPC EventBus bridge for Vert.x.
  *
- * This interface provides methods to create and manage a gRPC server that bridges
- * the Vert.x EventBus to external clients using gRPC protocol. It allows external
- * applications to communicate with the Vert.x EventBus through gRPC, enabling
- * cross-platform and cross-language communication.
+ * This interface provides methods to create and manage a gRPC server that bridges the Vert.x EventBus to external clients using gRPC protocol. It allows external applications to
+ * communicate with the Vert.x EventBus through gRPC, enabling cross-platform and cross-language communication.
  *
- * The bridge supports operations like publishing messages, sending requests,
- * subscribing to addresses, and handling responses from the EventBus.
+ * The bridge supports operations like publishing messages, sending requests, subscribing to addresses, and handling responses from the EventBus.
  */
 @VertxGen
 public interface GrpcEventBusBridge {
@@ -55,8 +52,8 @@ public interface GrpcEventBusBridge {
   }
 
   /**
-   * Creates a new gRPC EventBus bridge with the specified bridge options, port, and event handler.
-   * This is the most configurable factory method that all other factory methods delegate to.
+   * Creates a new gRPC EventBus bridge with the specified bridge options, port, and event handler. This is the most configurable factory method that all other factory methods
+   * delegate to.
    *
    * @param vertx the Vert.x instance to use
    * @param options the bridge options for controlling access to the EventBus
@@ -69,40 +66,34 @@ public interface GrpcEventBusBridge {
   }
 
   /**
-   * Start listening on the port as configured when creating the server.
-   * This method starts the gRPC server on the port specified during bridge creation.
-   * If no port was specified (or port was 0), a random available port will be chosen.
+   * Start listening on the port as configured when creating the server. This method starts the gRPC server on the port specified during bridge creation. If no port was specified
+   * (or port was 0), a random available port will be chosen.
    *
    * @return a future that will be completed when the server has been started, with this instance as the result
    */
   Future<GrpcEventBusBridge> listen();
 
   /**
-   * Start listening on the specified port, ignoring port configured when creating the server.
-   * This method allows overriding the port that was specified during bridge creation.
+   * Start listening on the specified port, ignoring port configured when creating the server. This method allows overriding the port that was specified during bridge creation.
    *
    * @param port the gRPC port to listen on (0 means choose a random available port)
-   *
    * @return a future that will be completed when the server has been started, with this instance as the result
    */
   Future<GrpcEventBusBridge> listen(int port);
 
   /**
-   * Start listening on the specified port and host, ignoring port configured when creating the server.
-   * This method allows overriding both the port and host that were specified during bridge creation.
+   * Start listening on the specified port and host, ignoring port configured when creating the server. This method allows overriding both the port and host that were specified
+   * during bridge creation.
    *
    * @param port the gRPC port to listen on (0 means choose a random available port)
    * @param host the host to bind to (e.g., "localhost" for local connections only, "0.0.0.0" for all network interfaces)
-   *
    * @return a future that will be completed when the server has been started, with this instance as the result
    */
   Future<GrpcEventBusBridge> listen(int port, String host);
 
   /**
-   * Close the current gRPC server.
-   * This method stops the gRPC server and releases all resources associated with it.
-   * After calling this method, the bridge will no longer accept new connections,
-   * but existing connections may continue to operate until they are closed.
+   * Close the current gRPC server. This method stops the gRPC server and releases all resources associated with it. After calling this method, the bridge will no longer accept new
+   * connections, but existing connections may continue to operate until they are closed.
    *
    * @return a future that will be completed when the server has been closed
    */

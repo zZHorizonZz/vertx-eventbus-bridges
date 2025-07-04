@@ -17,7 +17,9 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.grpc.common.GrpcMessage;
 import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.EventRequest;
+import io.vertx.grpc.event.v1alpha.PublishMessageRequest;
+import io.vertx.grpc.event.v1alpha.RequestMessageRequest;
+import io.vertx.grpc.event.v1alpha.SubscribeMessageRequest;
 import org.junit.Test;
 
 import java.util.Base64;
@@ -43,6 +45,20 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
   private static final CharSequence TRUE = HttpHeaders.createOptimized("1");
 
   private HttpClient client;
+
+  public static BufferInternal encode(GrpcMessage message, boolean trailer) {
+    boolean compressed = !message.encoding().equals("identity");
+    return encode(message.payload(), compressed, trailer);
+  }
+
+  public static BufferInternal encode(Buffer payload, boolean compressed, boolean trailer) {
+    int len = payload.length();
+    BufferInternal encoded = BufferInternal.buffer(5 + len);
+    encoded.appendByte((byte) ((trailer ? 0x80 : 0x00) | (compressed ? 0x01 : 0x00)));
+    encoded.appendInt(len);
+    encoded.appendBuffer(payload);
+    return encoded;
+  }
 
   @Override
   public void before(TestContext context) {
@@ -191,24 +207,10 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     return res;
   }
 
-  public static BufferInternal encode(GrpcMessage message, boolean trailer) {
-    boolean compressed = !message.encoding().equals("identity");
-    return encode(message.payload(), compressed, trailer);
-  }
-
-  public static BufferInternal encode(Buffer payload, boolean compressed, boolean trailer) {
-    int len = payload.length();
-    BufferInternal encoded = BufferInternal.buffer(5 + len);
-    encoded.appendByte((byte) ((trailer ? 0x80 : 0x00) | (compressed ? 0x01 : 0x00)));
-    encoded.appendInt(len);
-    encoded.appendBuffer(payload);
-    return encoded;
-  }
-
   public Future<JsonObject> request(String address, JsonObject message, long timeout) {
     Promise<JsonObject> promise = Promise.promise();
 
-    EventRequest request = EventRequest.newBuilder()
+    RequestMessageRequest request = RequestMessageRequest.newBuilder()
       .setAddress(address)
       .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
       .setTimeout(Durations.fromMillis(timeout))
@@ -266,7 +268,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
   public Future<Void> publish(String address, JsonObject message) {
     Promise<Void> promise = Promise.promise();
 
-    EventRequest request = EventRequest.newBuilder()
+    PublishMessageRequest request = PublishMessageRequest.newBuilder()
       .setAddress(address)
       .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
       .build();
@@ -304,7 +306,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     client.request(HttpMethod.POST, "/vertx.event.v1alpha.EventBusBridge/Subscribe").compose(httpRequest -> {
         requestHeaders().forEach(httpRequest::putHeader);
 
-        EventRequest request = EventRequest.newBuilder()
+        SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder()
           .setAddress(address)
           .build();
 

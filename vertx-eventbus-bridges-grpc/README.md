@@ -7,7 +7,8 @@ This repository contains the common configuration for event bus bridges.
 
 ## Event Bus Bridges
 
-Event bus bridges are components that manage a (generally bidirectional) mapping between the vert.x event bus and another protocol:
+Event bus bridges are components that manage a (generally bidirectional) mapping between the vert.x event bus and
+another protocol:
 
 ```
     Event Bus <---- BRIDGE ----> Stomp / AMQP / TCP / SOCKJS ...
@@ -25,7 +26,8 @@ This projects contains two data objects:
 * Bridge Options
 * Permitted Options
 
-`BridgeOptions` maintains the list of inbound and outbound permitted options, while `PermittedOptions` describes an address that is accepted by the bridge.
+`BridgeOptions` maintains the list of inbound and outbound permitted options, while `PermittedOptions` describes an
+address that is accepted by the bridge.
 
 Permitted options be used to match:
 

@@ -9,8 +9,7 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.grpc.client.GrpcClient;
-import io.vertx.grpc.event.v1alpha.EventBusBridgeGrpcClient;
-import io.vertx.grpc.event.v1alpha.EventRequest;
+import io.vertx.grpc.event.v1alpha.*;
 import org.junit.After;
 import org.junit.Test;
 
@@ -53,7 +52,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       async.complete();
     });
 
-    EventRequest request = EventRequest.newBuilder()
+    SendMessageRequest request = SendMessageRequest.newBuilder()
       .setAddress("test")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .build();
@@ -66,7 +65,8 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   @Test
   public void testSendWithReply(TestContext context) {
     Async async = context.async();
-    EventRequest request = EventRequest.newBuilder()
+
+    SendMessageRequest request = SendMessageRequest.newBuilder()
       .setAddress("hello")
       .setReplyAddress("reply-address")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
@@ -83,7 +83,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   @Test
   public void testRequest(TestContext context) {
     Async async = context.async();
-    EventRequest request = EventRequest.newBuilder()
+    RequestMessageRequest request = RequestMessageRequest.newBuilder()
       .setAddress("hello")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .setTimeout(Durations.fromMillis(5000))
@@ -111,7 +111,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       }
     });
 
-    EventRequest request = EventRequest.newBuilder()
+    PublishMessageRequest request = PublishMessageRequest.newBuilder()
       .setAddress("test")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .build();
@@ -127,7 +127,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   public void testSubscribe(TestContext context) {
     Async async = context.async();
     AtomicReference<String> consumerId = new AtomicReference<>();
-    EventRequest request = EventRequest.newBuilder().setAddress("ping").build();
+    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
 
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream -> stream.handler(response -> {
       consumerId.set(response.getConsumer());
@@ -138,7 +138,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       Struct body = response.getBody();
       context.assertEquals("hi", body.getFieldsMap().get("value").getStringValue());
 
-      EventRequest unsubRequest = EventRequest.newBuilder()
+      UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
         .setAddress("ping")
         .setConsumer(consumerId.get())
         .build();
@@ -204,11 +204,11 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   public void testUnsubscribeWithoutReceivingMessage(TestContext context) {
     Async async = context.async();
     AtomicReference<String> consumerId = new AtomicReference<>();
-    EventRequest request = EventRequest.newBuilder().setAddress("ping").build();
+    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
 
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream -> stream.handler(response -> {
       consumerId.set(response.getConsumer());
-      EventRequest unsubRequest = EventRequest.newBuilder()
+      UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
         .setAddress("ping")
         .setConsumer(consumerId.get())
         .build();
@@ -225,7 +225,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   @Test
   public void testUnsubscribeInvalidConsumerId(TestContext context) {
     Async async = context.async();
-    EventRequest unsubRequest = EventRequest.newBuilder()
+    UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
       .setAddress("ping")
       .setConsumer("invalid-consumer-id")
       .build();
@@ -240,7 +240,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
     Async async = context.async(2);
     AtomicReference<String> consumerId1 = new AtomicReference<>();
     AtomicReference<String> consumerId2 = new AtomicReference<>();
-    EventRequest request = EventRequest.newBuilder().setAddress("ping").build();
+    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
 
     // First subscription
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream1 -> stream1.handler(response -> {
@@ -259,14 +259,14 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
         consumerId2.set(response2.getConsumer());
         context.assertNotEquals(consumerId1.get(), consumerId2.get());
 
-        EventRequest unsubRequest1 = EventRequest.newBuilder()
+        UnsubscribeMessageRequest unsubRequest1 = UnsubscribeMessageRequest.newBuilder()
           .setAddress("ping")
           .setConsumer(consumerId1.get())
           .build();
 
         grpcClient.unsubscribe(unsubRequest1).onComplete(context.asyncAssertSuccess(unsubResponse1 -> {
           async.countDown();
-          EventRequest unsubRequest2 = EventRequest.newBuilder()
+          UnsubscribeMessageRequest unsubRequest2 = UnsubscribeMessageRequest.newBuilder()
             .setAddress("ping")
             .setConsumer(consumerId2.get())
             .build();
@@ -286,7 +286,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
     AtomicReference<String> consumerId = new AtomicReference<>();
     AtomicReference<Long> firstMessageTime = new AtomicReference<>();
     AtomicReference<Long> lastMessageTime = new AtomicReference<>();
-    EventRequest request = EventRequest.newBuilder().setAddress("ping").build();
+    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
 
     int expectedMessages = 3;
 
@@ -316,7 +316,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
         context.assertTrue(timeDifference >= 1000, "Expected delay between messages, but got: " + timeDifference + "ms");
         System.out.println("[DEBUG] Time difference between first and last message: " + timeDifference + "ms");
 
-        EventRequest unsubRequest = EventRequest.newBuilder()
+        UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
           .setAddress("ping")
           .setConsumer(consumerId.get())
           .build();

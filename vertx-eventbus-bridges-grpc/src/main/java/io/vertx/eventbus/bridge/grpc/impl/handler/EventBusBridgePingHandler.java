@@ -17,25 +17,30 @@ import io.vertx.grpc.server.GrpcServerRequest;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgePingHandler extends EventBusBridgeHandlerBase implements Handler<GrpcServerRequest<Empty, Empty>> {
+public class EventBusBridgePingHandler extends EventBusBridgeHandlerBase<Empty, Empty> {
 
-    public static final ServiceMethod<Empty, Empty> SERVICE_METHOD = ServiceMethod.server(
-            ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
-            "Ping",
-            GrpcMessageEncoder.encoder(),
-            GrpcMessageDecoder.decoder(Empty.newBuilder()));
+  public static final ServiceMethod<Empty, Empty> SERVICE_METHOD = ServiceMethod.server(
+    ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
+    "Ping",
+    GrpcMessageEncoder.encoder(),
+    GrpcMessageDecoder.decoder(Empty.newBuilder()));
 
-    public EventBusBridgePingHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
-        super(bus, options, bridgeEventHandler, compiledREs);
-    }
+  public EventBusBridgePingHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
+    super(bus, options, bridgeEventHandler, compiledREs);
+  }
 
-    @Override
-    public void handle(GrpcServerRequest<Empty, Empty> event) {
-        JsonObject eventJson = createEvent("ping", null);
+  @Override
+  public void handle(GrpcServerRequest<Empty, Empty> event) {
+    JsonObject eventJson = createEvent("ping", null);
 
-        checkCallHook(BridgeEventType.SOCKET_PING, eventJson,
-                () -> event.response().send(Empty.getDefaultInstance()),
-                () -> event.response().send(Empty.getDefaultInstance())
-        );
-    }
+    checkCallHook(BridgeEventType.SOCKET_PING, eventJson,
+      () -> event.response().send(Empty.getDefaultInstance()),
+      () -> event.response().send(Empty.getDefaultInstance())
+    );
+  }
+
+  @Override
+  protected JsonObject createEvent(String type, Empty request) {
+    return new JsonObject().put("type", type);
+  }
 }

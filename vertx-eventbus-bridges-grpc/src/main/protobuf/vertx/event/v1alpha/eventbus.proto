@@ -13,43 +13,91 @@ option java_outer_classname = "EventBusBridgeProto";
 
 service EventBusBridge {
   // Publish a message to an address
-  rpc Publish(EventRequest) returns (google.protobuf.Empty) {}
+  rpc Publish(PublishMessageRequest) returns (google.protobuf.Empty) {}
 
   // Send a message to an address (point-to-point)
-  rpc Send(EventRequest) returns (EventMessage) {}
+  rpc Send(SendMessageRequest) returns (EventMessage) {}
 
   // Request-reply pattern
-  rpc Request(EventRequest) returns (EventMessage) {}
+  rpc Request(RequestMessageRequest) returns (EventMessage) {}
 
   // Subscribe to messages from an address
-  rpc Subscribe(EventRequest) returns (stream EventMessage) {}
+  rpc Subscribe(SubscribeMessageRequest) returns (stream EventMessage) {}
 
   // Unsubscribe from an address
-  rpc Unsubscribe(EventRequest) returns (google.protobuf.Empty) {}
+  rpc Unsubscribe(UnsubscribeMessageRequest) returns (google.protobuf.Empty) {}
 
   // Health check
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
-// Core message used for publishing/sending
-message EventRequest {
+// Message used for publishing to an address
+message PublishMessageRequest {
   // The address the message was sent to
+  string address = 1;
+
+  // Message headers
+  map<string, string> headers = 2;
+
+  // Message payload as structured data
+  google.protobuf.Struct body = 3;
+}
+
+// Message used for sending to an address (point-to-point)
+message SendMessageRequest {
+  // The address the message was sent to
+  string address = 1;
+
+  // Optional reply address
+  string reply_address = 2;
+
+  // Message headers
+  map<string, string> headers = 3;
+
+  // Message payload as structured data
+  google.protobuf.Struct body = 4;
+
+  // Timeout in milliseconds
+  google.protobuf.Duration timeout = 5;
+}
+
+// Message used for request-reply pattern
+message RequestMessageRequest {
+  // The address the message was sent to
+  string address = 1;
+
+  // Optional reply address
+  string reply_address = 2;
+
+  // Message headers
+  map<string, string> headers = 3;
+
+  // Message payload as structured data
+  google.protobuf.Struct body = 4;
+
+  // Timeout in milliseconds
+  google.protobuf.Duration timeout = 5;
+}
+
+// Message used for subscribing to an address
+message SubscribeMessageRequest {
+  // The address to subscribe to
   string address = 1;
 
   // Consumer for subscription management
   string consumer = 2;
 
-  // Optional reply address
-  string reply_address = 3;
-
   // Message headers
-  map<string, string> headers = 4;
+  map<string, string> headers = 3;
+}
 
-  // Message payload as structured data
-  google.protobuf.Struct body = 5;
+// Message used for unsubscribing from an address
+message UnsubscribeMessageRequest {
+  // The address to unsubscribe from
+  string address = 1;
 
-  // Timeout in milliseconds
-  google.protobuf.Duration timeout = 6;
+  // Consumer for subscription management
+  string consumer = 2;
 }
 
 // Message received from the event bus

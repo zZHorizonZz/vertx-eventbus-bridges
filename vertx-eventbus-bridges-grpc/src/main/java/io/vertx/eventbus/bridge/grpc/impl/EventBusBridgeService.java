@@ -19,39 +19,39 @@ import java.util.regex.Pattern;
  */
 public class EventBusBridgeService implements Service {
 
-    private static final ServiceName SERVICE_NAME = ServiceName.create("vertx.event.v1alpha.EventBusBridge");
-    private static final Descriptors.ServiceDescriptor SERVICE_DESCRIPTOR = EventBusBridgeProto.getDescriptor().findServiceByName("EventBusBridge");
+  private static final ServiceName SERVICE_NAME = ServiceName.create("vertx.event.v1alpha.EventBusBridge");
+  private static final Descriptors.ServiceDescriptor SERVICE_DESCRIPTOR = EventBusBridgeProto.getDescriptor().findServiceByName("EventBusBridge");
 
-    private final EventBus eventBus;
-    private final BridgeOptions options;
-    private final Handler<BridgeEvent> bridgeEventHandler;
-    private final Map<String, Pattern> compiledREs;
+  private final EventBus eventBus;
+  private final BridgeOptions options;
+  private final Handler<BridgeEvent> bridgeEventHandler;
+  private final Map<String, Pattern> compiledREs;
 
-    public EventBusBridgeService(EventBus eventBus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
-        this.eventBus = eventBus;
-        this.options = options;
-        this.bridgeEventHandler = bridgeEventHandler;
-        this.compiledREs = compiledREs;
-    }
+  public EventBusBridgeService(EventBus eventBus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
+    this.eventBus = eventBus;
+    this.options = options;
+    this.bridgeEventHandler = bridgeEventHandler;
+    this.compiledREs = compiledREs;
+  }
 
-    @Override
-    public ServiceName name() {
-        return SERVICE_NAME;
-    }
+  @Override
+  public ServiceName name() {
+    return SERVICE_NAME;
+  }
 
-    @Override
-    public Descriptors.ServiceDescriptor descriptor() {
-        return SERVICE_DESCRIPTOR;
-    }
+  @Override
+  public Descriptors.ServiceDescriptor descriptor() {
+    return SERVICE_DESCRIPTOR;
+  }
 
-    @Override
-    public void bind(GrpcServer server) {
-        // Register handlers for all supported operations
-        server.callHandler(EventBusBridgePublishHandler.SERVICE_METHOD, new EventBusBridgePublishHandler(eventBus, options, bridgeEventHandler, compiledREs));
-        server.callHandler(EventBusBridgeSendHandler.SERVICE_METHOD, new EventBusBridgeSendHandler(eventBus, options, bridgeEventHandler, compiledREs));
-        server.callHandler(EventBusBridgeRequestHandler.SERVICE_METHOD, new EventBusBridgeRequestHandler(eventBus, options, bridgeEventHandler, compiledREs));
-        server.callHandler(EventBusBridgeSubscribeHandler.SERVICE_METHOD, new EventBusBridgeSubscribeHandler(eventBus, options, bridgeEventHandler, compiledREs));
-        server.callHandler(EventBusBridgeUnsubscribeHandler.SERVICE_METHOD, new EventBusBridgeUnsubscribeHandler(eventBus, options, bridgeEventHandler, compiledREs));
-        server.callHandler(EventBusBridgePingHandler.SERVICE_METHOD, new EventBusBridgePingHandler(eventBus, options, bridgeEventHandler, compiledREs));
-    }
+  @Override
+  public void bind(GrpcServer server) {
+    // Register handlers for all supported operations
+    server.callHandler(EventBusBridgePublishHandler.SERVICE_METHOD, new EventBusBridgePublishHandler(eventBus, options, bridgeEventHandler, compiledREs));
+    server.callHandler(EventBusBridgeSendHandler.SERVICE_METHOD, new EventBusBridgeSendHandler(eventBus, options, bridgeEventHandler, compiledREs));
+    server.callHandler(EventBusBridgeRequestHandler.SERVICE_METHOD, new EventBusBridgeRequestHandler(eventBus, options, bridgeEventHandler, compiledREs));
+    server.callHandler(EventBusBridgeSubscribeHandler.SERVICE_METHOD, new EventBusBridgeSubscribeHandler(eventBus, options, bridgeEventHandler, compiledREs));
+    server.callHandler(EventBusBridgeUnsubscribeHandler.SERVICE_METHOD, new EventBusBridgeUnsubscribeHandler(eventBus, options, bridgeEventHandler, compiledREs));
+    server.callHandler(EventBusBridgePingHandler.SERVICE_METHOD, new EventBusBridgePingHandler(eventBus, options, bridgeEventHandler, compiledREs));
+  }
 }

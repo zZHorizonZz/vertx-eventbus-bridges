@@ -15,6 +15,14 @@
 
   <name>Vert.x - EventBus - Bridges - Docs</name>
 
+  <dependencies>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-eventbus-bridges-grpc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
