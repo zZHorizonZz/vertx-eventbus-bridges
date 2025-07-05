@@ -17,18 +17,6 @@
   <name>Vert.x - EventBus - Bridges - gRPC</name>
   <description>Vert.x eventbus bridge gRPC configuration</description>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-dependencies</artifactId>
-        <version>${project.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>io.vertx</groupId>

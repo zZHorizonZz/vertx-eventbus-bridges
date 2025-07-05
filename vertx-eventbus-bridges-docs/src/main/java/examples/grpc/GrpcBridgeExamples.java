@@ -8,8 +8,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.eventbus.bridge.grpc.GrpcEventBusBridge;
+import io.vertx.eventbus.bridge.grpc.GrpcEventBusBridgeService;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.grpc.server.GrpcServer;
 import io.vertx.grpc.client.GrpcClient;
 import io.vertx.grpc.event.v1alpha.EventBusBridgeGrpcClient;
 import io.vertx.grpc.event.v1alpha.EventMessage;
@@ -206,5 +208,143 @@ public class GrpcBridgeExamples {
     // This is a placeholder for the actual conversion method
     // In a real implementation, you would convert Protobuf Struct to JsonObject
     return new JsonObject();
+  }
+
+  public void createCustomServerWithBridgeService(Vertx vertx) {
+    // Configure bridge options
+    BridgeOptions options = new BridgeOptions()
+      .addInboundPermitted(new PermittedOptions().setAddress("hello"))
+      .addInboundPermitted(new PermittedOptions().setAddress("echo"))
+      .addOutboundPermitted(new PermittedOptions().setAddress("news"));
+
+    // Create the EventBus bridge service
+    GrpcEventBusBridgeService bridgeService = GrpcEventBusBridgeService.create(
+      vertx.eventBus(),
+      options,
+      event -> {
+        // Optional event handler for bridge events
+        System.out.println("Bridge event: " + event.type());
+        event.complete(true);
+      }
+    );
+
+    // Create a custom gRPC server
+    GrpcServer grpcServer = GrpcServer.server(vertx);
+
+    // Bind the bridge service to the gRPC server
+    bridgeService.bind(grpcServer);
+
+    // Create an HTTP server and use the gRPC server as request handler
+    vertx.createHttpServer()
+      .requestHandler(grpcServer)
+      .listen(7000)
+      .onComplete(ar -> {
+        if (ar.succeeded()) {
+          System.out.println("Custom gRPC server with EventBus bridge started on port 7000");
+        } else {
+          System.err.println("Failed to start custom gRPC server: " + ar.cause());
+        }
+      });
+  }
+
+  public void createServerWithMultipleServices(Vertx vertx) {
+    // Create a custom gRPC server
+    GrpcServer grpcServer = GrpcServer.server(vertx);
+
+    // Add your custom services first
+    // MyCustomService customService = new MyCustomService();
+    // customService.bind(grpcServer);
+    // AnotherCustomService anotherService = new AnotherCustomService();
+    // anotherService.bind(grpcServer);
+
+    // Configure and add the EventBus bridge service
+    BridgeOptions options = new BridgeOptions()
+      .addInboundPermitted(new PermittedOptions().setAddress("hello"))
+      .addOutboundPermitted(new PermittedOptions().setAddress("notifications"));
+
+    GrpcEventBusBridgeService bridgeService = GrpcEventBusBridgeService.create(
+      vertx.eventBus(),
+      options
+    );
+
+    // Bind the bridge service alongside your other services
+    bridgeService.bind(grpcServer);
+
+    // Create an HTTP server and use the gRPC server as request handler
+    vertx.createHttpServer()
+      .requestHandler(grpcServer)
+      .listen(8080)
+      .onComplete(ar -> {
+        if (ar.succeeded()) {
+          System.out.println("gRPC server with multiple services started on port 8080");
+        } else {
+          System.err.println("Failed to start gRPC server: " + ar.cause());
+        }
+      });
+  }
+
+  public void createBridgeServiceWithAdvancedConfig(Vertx vertx) {
+    // Advanced bridge configuration
+    BridgeOptions options = new BridgeOptions()
+      // Inbound permissions (client -> EventBus)
+      .addInboundPermitted(new PermittedOptions().setAddress("api.users"))
+      .addInboundPermitted(new PermittedOptions().setAddress("api.orders"))
+      .addInboundPermitted(new PermittedOptions().setAddressRegex("api\\.notifications\\..*"))
+
+      // Outbound permissions (EventBus -> client)
+      .addOutboundPermitted(new PermittedOptions().setAddress("events.user.created"))
+      .addOutboundPermitted(new PermittedOptions().setAddress("events.order.updated"))
+      .addOutboundPermitted(new PermittedOptions().setAddressRegex("events\\.system\\..*"));
+
+    // Create the bridge service with advanced event handling
+    GrpcEventBusBridgeService bridgeService = GrpcEventBusBridgeService.create(
+      vertx.eventBus(),
+      options,
+      event -> {
+        // Advanced bridge event handling
+        switch (event.type()) {
+          case SOCKET_CREATED:
+            System.out.println("New gRPC client connected");
+            break;
+          case SOCKET_CLOSED:
+            System.out.println("gRPC client disconnected");
+            break;
+          case SEND:
+            System.out.println("Message sent to: " + event.getRawMessage().getString("address"));
+            break;
+          case PUBLISH:
+            System.out.println("Message published to: " + event.getRawMessage().getString("address"));
+            break;
+          case RECEIVE:
+            System.out.println("Message received from: " + event.getRawMessage().getString("address"));
+            break;
+          case REGISTER:
+            System.out.println("Client registered for: " + event.getRawMessage().getString("address"));
+            break;
+          case UNREGISTER:
+            System.out.println("Client unregistered from: " + event.getRawMessage().getString("address"));
+            break;
+        }
+
+        // Always complete the event to allow it to proceed
+        event.complete(true);
+      }
+    );
+
+    // Create and configure the server
+    GrpcServer grpcServer = GrpcServer.server(vertx);
+    bridgeService.bind(grpcServer);
+
+    // Create an HTTP server and use the gRPC server as request handler
+    vertx.createHttpServer()
+      .requestHandler(grpcServer)
+      .listen(9000)
+      .onComplete(ar -> {
+        if (ar.succeeded()) {
+          System.out.println("Advanced gRPC EventBus bridge started on port 9000");
+        } else {
+          System.err.println("Failed to start advanced bridge: " + ar.cause());
+        }
+      });
   }
 }

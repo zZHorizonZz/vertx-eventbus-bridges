@@ -30,7 +30,8 @@ The bridge also supports gRPC-Web, allowing web clients to communicate with the 
 
 == Protocol Description
 
-The gRPC EventBus Bridge uses Protocol Buffers to define the service and message structures. The service definition includes the following operations:
+The gRPC EventBus Bridge uses Protocol Buffers to define the service and message structures.
+The service definition includes the following operations:
 
 1. `Publish`: Publishes a message to an address (one-way communication)
 2. `Send`: Sends a message to an address (point-to-point)
@@ -239,4 +240,36 @@ To perform a health check:
 [source,java]
 ----
 {@link examples.grpc.GrpcBridgeExamples#healthCheck}
+----
+
+== Using GrpcEventBusBridgeService with Custom gRPC Server
+
+While the previous examples show how to create a standalone gRPC EventBus Bridge server, you may want to integrate the EventBus bridge functionality into an existing custom gRPC server that already hosts other services.
+The `GrpcEventBusBridgeService` allows you to do exactly that.
+
+=== Integration with Custom gRPC Server
+
+Here's how to integrate the EventBus bridge service into your existing gRPC server:
+
+[source,java]
+----
+{@link examples.grpc.GrpcBridgeExamples#createCustomServerWithBridgeService}
+----
+
+=== Custom Server with Multiple Services
+
+You can easily combine the EventBus bridge with your own custom gRPC services:
+
+[source,java]
+----
+{@link examples.grpc.GrpcBridgeExamples#createServerWithMultipleServices}
+----
+
+=== Advanced Configuration
+
+The `GrpcEventBusBridgeService` supports the same configuration options as the standalone bridge:
+
+[source,java]
+----
+{@link examples.grpc.GrpcBridgeExamples#createBridgeServiceWithAdvancedConfig}
 ----

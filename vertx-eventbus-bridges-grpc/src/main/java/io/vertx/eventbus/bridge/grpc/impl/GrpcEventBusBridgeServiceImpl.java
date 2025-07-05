@@ -4,20 +4,21 @@ import com.google.protobuf.Descriptors;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.eventbus.bridge.grpc.BridgeEvent;
+import io.vertx.eventbus.bridge.grpc.GrpcEventBusBridgeService;
 import io.vertx.eventbus.bridge.grpc.impl.handler.*;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.ServiceName;
 import io.vertx.grpc.event.v1alpha.EventBusBridgeProto;
 import io.vertx.grpc.server.GrpcServer;
-import io.vertx.grpc.server.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
  * The service implements the gRPC service defined in the protobuf file and exposes the EventBus operations through gRPC methods.
  */
-public class EventBusBridgeService implements Service {
+public class GrpcEventBusBridgeServiceImpl implements GrpcEventBusBridgeService {
 
   private static final ServiceName SERVICE_NAME = ServiceName.create("vertx.event.v1alpha.EventBusBridge");
   private static final Descriptors.ServiceDescriptor SERVICE_DESCRIPTOR = EventBusBridgeProto.getDescriptor().findServiceByName("EventBusBridge");
@@ -25,13 +26,12 @@ public class EventBusBridgeService implements Service {
   private final EventBus eventBus;
   private final BridgeOptions options;
   private final Handler<BridgeEvent> bridgeEventHandler;
-  private final Map<String, Pattern> compiledREs;
+  private final Map<String, Pattern> compiledREs = new HashMap<>();
 
-  public EventBusBridgeService(EventBus eventBus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
+  public GrpcEventBusBridgeServiceImpl(EventBus eventBus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler) {
     this.eventBus = eventBus;
     this.options = options;
     this.bridgeEventHandler = bridgeEventHandler;
-    this.compiledREs = compiledREs;
   }
 
   @Override

@@ -15,10 +15,6 @@ import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.server.GrpcServer;
 import io.vertx.grpc.server.GrpcServerOptions;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 /**
  * Implementation of the GrpcEventBusBridge interface.
  * <p>
@@ -36,7 +32,6 @@ public class GrpcEventBusBridgeImpl implements GrpcEventBusBridge {
   private final BridgeOptions options;
   private final Handler<BridgeEvent> bridgeEventHandler;
   private final int port;
-  private final Map<String, Pattern> compiledREs = new HashMap<>();
   private HttpServer server;
 
   public GrpcEventBusBridgeImpl(Vertx vertx, BridgeOptions options, int port, Handler<BridgeEvent> eventHandler) {
@@ -67,7 +62,7 @@ public class GrpcEventBusBridgeImpl implements GrpcEventBusBridge {
 
     try {
       // Create the EventBus bridge service that will handle gRPC requests
-      EventBusBridgeService service = new EventBusBridgeService(eb, options, bridgeEventHandler, compiledREs);
+      GrpcEventBusBridgeServiceImpl service = new GrpcEventBusBridgeServiceImpl(eb, options, bridgeEventHandler);
 
       // Configure the HTTP server options
       HttpServerOptions serverOptions = new HttpServerOptions()
