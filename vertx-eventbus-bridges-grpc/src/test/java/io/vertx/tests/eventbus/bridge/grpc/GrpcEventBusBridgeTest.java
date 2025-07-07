@@ -52,7 +52,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       async.complete();
     });
 
-    SendMessageRequest request = SendMessageRequest.newBuilder()
+    SendOp request = SendOp.newBuilder()
       .setAddress("test")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .build();
@@ -66,7 +66,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   public void testSendWithReply(TestContext context) {
     Async async = context.async();
 
-    SendMessageRequest request = SendMessageRequest.newBuilder()
+    SendOp request = SendOp.newBuilder()
       .setAddress("hello")
       .setReplyAddress("reply-address")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
@@ -83,7 +83,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   @Test
   public void testRequest(TestContext context) {
     Async async = context.async();
-    RequestMessageRequest request = RequestMessageRequest.newBuilder()
+    RequestOp request = RequestOp.newBuilder()
       .setAddress("hello")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .setTimeout(Durations.fromMillis(5000))
@@ -111,7 +111,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       }
     });
 
-    PublishMessageRequest request = PublishMessageRequest.newBuilder()
+    PublishOp request = PublishOp.newBuilder()
       .setAddress("test")
       .setBody(jsonToStruct(new JsonObject().put("value", "vert.x")))
       .build();
@@ -127,7 +127,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   public void testSubscribe(TestContext context) {
     Async async = context.async();
     AtomicReference<String> consumerId = new AtomicReference<>();
-    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
+    SubscribeOp request = SubscribeOp.newBuilder().setAddress("ping").build();
 
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream -> stream.handler(response -> {
       consumerId.set(response.getConsumer());
@@ -138,7 +138,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
       Struct body = response.getBody();
       context.assertEquals("hi", body.getFieldsMap().get("value").getStringValue());
 
-      UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
+      UnsubscribeOp unsubRequest = UnsubscribeOp.newBuilder()
         .setAddress("ping")
         .setConsumer(consumerId.get())
         .build();
@@ -204,11 +204,11 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   public void testUnsubscribeWithoutReceivingMessage(TestContext context) {
     Async async = context.async();
     AtomicReference<String> consumerId = new AtomicReference<>();
-    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
+    SubscribeOp request = SubscribeOp.newBuilder().setAddress("ping").build();
 
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream -> stream.handler(response -> {
       consumerId.set(response.getConsumer());
-      UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
+      UnsubscribeOp unsubRequest = UnsubscribeOp.newBuilder()
         .setAddress("ping")
         .setConsumer(consumerId.get())
         .build();
@@ -225,7 +225,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
   @Test
   public void testUnsubscribeInvalidConsumerId(TestContext context) {
     Async async = context.async();
-    UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
+    UnsubscribeOp unsubRequest = UnsubscribeOp.newBuilder()
       .setAddress("ping")
       .setConsumer("invalid-consumer-id")
       .build();
@@ -240,7 +240,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
     Async async = context.async(2);
     AtomicReference<String> consumerId1 = new AtomicReference<>();
     AtomicReference<String> consumerId2 = new AtomicReference<>();
-    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
+    SubscribeOp request = SubscribeOp.newBuilder().setAddress("ping").build();
 
     // First subscription
     grpcClient.subscribe(request).onComplete(context.asyncAssertSuccess(stream1 -> stream1.handler(response -> {
@@ -259,14 +259,14 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
         consumerId2.set(response2.getConsumer());
         context.assertNotEquals(consumerId1.get(), consumerId2.get());
 
-        UnsubscribeMessageRequest unsubRequest1 = UnsubscribeMessageRequest.newBuilder()
+        UnsubscribeOp unsubRequest1 = UnsubscribeOp.newBuilder()
           .setAddress("ping")
           .setConsumer(consumerId1.get())
           .build();
 
         grpcClient.unsubscribe(unsubRequest1).onComplete(context.asyncAssertSuccess(unsubResponse1 -> {
           async.countDown();
-          UnsubscribeMessageRequest unsubRequest2 = UnsubscribeMessageRequest.newBuilder()
+          UnsubscribeOp unsubRequest2 = UnsubscribeOp.newBuilder()
             .setAddress("ping")
             .setConsumer(consumerId2.get())
             .build();
@@ -286,7 +286,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
     AtomicReference<String> consumerId = new AtomicReference<>();
     AtomicReference<Long> firstMessageTime = new AtomicReference<>();
     AtomicReference<Long> lastMessageTime = new AtomicReference<>();
-    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder().setAddress("ping").build();
+    SubscribeOp request = SubscribeOp.newBuilder().setAddress("ping").build();
 
     int expectedMessages = 3;
 
@@ -315,7 +315,7 @@ public class GrpcEventBusBridgeTest extends GrpcEventBusBridgeTestBase {
         context.assertTrue(timeDifference >= 1000, "Expected delay between messages, but got: " + timeDifference + "ms");
         System.out.println("[DEBUG] Time difference between first and last message: " + timeDifference + "ms");
 
-        UnsubscribeMessageRequest unsubRequest = UnsubscribeMessageRequest.newBuilder()
+        UnsubscribeOp unsubRequest = UnsubscribeOp.newBuilder()
           .setAddress("ping")
           .setConsumer(consumerId.get())
           .build();

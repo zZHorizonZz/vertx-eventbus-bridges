@@ -14,8 +14,8 @@ import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.grpc.common.GrpcStatus;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.SubscribeMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.SubscribeOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.HashMap;
@@ -33,7 +33,7 @@ public abstract class EventBusBridgeHandlerBase<Req, Resp> implements Handler<Gr
 
   protected static final Map<String, Map<String, MessageConsumer<?>>> consumers = new ConcurrentHashMap<>();
   protected static final Map<String, io.vertx.core.eventbus.Message<?>> replies = new ConcurrentHashMap<>();
-  protected static final Map<String, GrpcServerRequest<SubscribeMessageRequest, EventMessage>> requests = new ConcurrentHashMap<>();
+  protected static final Map<String, GrpcServerRequest<SubscribeOp, EventBusMessage>> requests = new ConcurrentHashMap<>();
 
   protected final EventBus bus;
   protected final BridgeOptions options;
@@ -272,14 +272,14 @@ public abstract class EventBusBridgeHandlerBase<Req, Resp> implements Handler<Gr
    * @param error the error that occurred
    * @return a response message with the error details
    */
-  protected EventMessage handleErrorAndCreateResponse(Throwable error) {
+  protected EventBusMessage handleErrorAndCreateResponse(Throwable error) {
     if (error instanceof ReplyException) {
       ReplyException replyEx = (ReplyException) error;
-      return EventMessage.newBuilder()
+      return EventBusMessage.newBuilder()
         .setStatus(Status.newBuilder().setCode(replyEx.failureCode()).setMessage(replyEx.getMessage()).build())
         .build();
     } else {
-      return EventMessage.newBuilder()
+      return EventBusMessage.newBuilder()
         .setStatus(Status.newBuilder().setCode(500).setMessage(error.getMessage()).build())
         .build();
     }
@@ -303,7 +303,7 @@ public abstract class EventBusBridgeHandlerBase<Req, Resp> implements Handler<Gr
       MessageConsumer<?> consumer = addressConsumers.remove(consumerId);
 
       // Remove any associated gRPC request and end the response stream
-      GrpcServerRequest<SubscribeMessageRequest, EventMessage> request = requests.remove(consumerId);
+      GrpcServerRequest<SubscribeOp, EventBusMessage> request = requests.remove(consumerId);
       if (request != null) {
         request.response().end();
       }

@@ -14,12 +14,12 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.grpc.server.GrpcServer;
 import io.vertx.grpc.client.GrpcClient;
 import io.vertx.grpc.event.v1alpha.EventBusBridgeGrpcClient;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.PublishMessageRequest;
-import io.vertx.grpc.event.v1alpha.RequestMessageRequest;
-import io.vertx.grpc.event.v1alpha.SendMessageRequest;
-import io.vertx.grpc.event.v1alpha.SubscribeMessageRequest;
-import io.vertx.grpc.event.v1alpha.UnsubscribeMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.PublishOp;
+import io.vertx.grpc.event.v1alpha.RequestOp;
+import io.vertx.grpc.event.v1alpha.SendOp;
+import io.vertx.grpc.event.v1alpha.SubscribeOp;
+import io.vertx.grpc.event.v1alpha.UnsubscribeOp;
 
 public class GrpcBridgeExamples {
 
@@ -67,7 +67,7 @@ public class GrpcBridgeExamples {
     Struct messageBody = jsonToStruct(message);
 
     // Create the request
-    SendMessageRequest request = SendMessageRequest.newBuilder()
+    SendOp request = SendOp.newBuilder()
       .setAddress("hello")
       .setBody(messageBody)
       .build();
@@ -90,7 +90,7 @@ public class GrpcBridgeExamples {
     Struct messageBody = jsonToStruct(message);
 
     // Create the request with timeout
-    RequestMessageRequest request = RequestMessageRequest.newBuilder()
+    RequestOp request = RequestOp.newBuilder()
       .setAddress("hello")
       .setBody(messageBody)
       .setTimeout(Duration.newBuilder().setSeconds(5).build())  // 5 seconds timeout
@@ -99,7 +99,7 @@ public class GrpcBridgeExamples {
     // Send the request
     grpcClient.request(request).onComplete(ar -> {
       if (ar.succeeded()) {
-        EventMessage response = ar.result();
+        EventBusMessage response = ar.result();
         // Convert Protobuf Struct to JsonObject
         JsonObject responseBody = structToJson(response.getBody());
         System.out.println("Received response: " + responseBody);
@@ -117,7 +117,7 @@ public class GrpcBridgeExamples {
     Struct messageBody = jsonToStruct(message);
 
     // Create the request
-    PublishMessageRequest request = PublishMessageRequest.newBuilder()
+    PublishOp request = PublishOp.newBuilder()
       .setAddress("news")
       .setBody(messageBody)
       .build();
@@ -134,7 +134,7 @@ public class GrpcBridgeExamples {
 
   public void subscribeToMessages(EventBusBridgeGrpcClient grpcClient) {
     // Create the subscription request
-    SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder()
+    SubscribeOp request = SubscribeOp.newBuilder()
       .setAddress("news")
       .build();
 
@@ -142,7 +142,7 @@ public class GrpcBridgeExamples {
     grpcClient.subscribe(request).onComplete(ar -> {
       if (ar.succeeded()) {
         // Get the stream
-        ReadStream<EventMessage> stream = ar.result();
+        ReadStream<EventBusMessage> stream = ar.result();
 
         // Set a handler for incoming messages
         stream.handler(message -> {
@@ -171,7 +171,7 @@ public class GrpcBridgeExamples {
 
   public void unsubscribeFromMessages(EventBusBridgeGrpcClient grpcClient, String consumerId) {
     // Create the unsubscribe request with the consumer ID received during subscription
-    UnsubscribeMessageRequest request = UnsubscribeMessageRequest.newBuilder()
+    UnsubscribeOp request = UnsubscribeOp.newBuilder()
       .setAddress("news")
       .setConsumer(consumerId)  // The consumer ID received in the subscription
       .build();

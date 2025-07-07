@@ -16,10 +16,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.grpc.common.GrpcMessage;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.PublishMessageRequest;
-import io.vertx.grpc.event.v1alpha.RequestMessageRequest;
-import io.vertx.grpc.event.v1alpha.SubscribeMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.PublishOp;
+import io.vertx.grpc.event.v1alpha.RequestOp;
+import io.vertx.grpc.event.v1alpha.SubscribeOp;
 import org.junit.Test;
 
 import java.util.Base64;
@@ -190,7 +190,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
   public Future<JsonObject> request(String address, JsonObject message, long timeout) {
     Promise<JsonObject> promise = Promise.promise();
 
-    RequestMessageRequest request = RequestMessageRequest.newBuilder()
+    RequestOp request = RequestOp.newBuilder()
       .setAddress(address)
       .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
       .setTimeout(Durations.fromMillis(timeout))
@@ -212,7 +212,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
                   int len = prefix.getInt(1);
                   pos += PREFIX_SIZE;
 
-                  EventMessage eventMessage = EventMessage.parseFrom(body.getBuffer(pos, pos + len).getBytes());
+                  EventBusMessage eventMessage = EventBusMessage.parseFrom(body.getBuffer(pos, pos + len).getBytes());
                   pos += len;
 
                   Buffer trailer = body.getBuffer(pos, body.length());
@@ -240,7 +240,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
   public Future<Void> publish(String address, JsonObject message) {
     Promise<Void> promise = Promise.promise();
 
-    PublishMessageRequest request = PublishMessageRequest.newBuilder()
+    PublishOp request = PublishOp.newBuilder()
       .setAddress(address)
       .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
       .build();
@@ -270,7 +270,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
     client.request(HttpMethod.POST, "/vertx.event.v1alpha.EventBusBridge/Subscribe").compose(httpRequest -> {
         requestHeaders().forEach(httpRequest::putHeader);
 
-        SubscribeMessageRequest request = SubscribeMessageRequest.newBuilder()
+        SubscribeOp request = SubscribeOp.newBuilder()
           .setAddress(address)
           .build();
 

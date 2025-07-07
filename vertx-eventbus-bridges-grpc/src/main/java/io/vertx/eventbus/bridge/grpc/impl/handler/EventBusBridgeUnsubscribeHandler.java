@@ -9,26 +9,26 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.UnsubscribeMessageRequest;
+import io.vertx.grpc.event.v1alpha.UnsubscribeOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgeUnsubscribeHandler extends EventBusBridgeHandlerBase<UnsubscribeMessageRequest, Empty> {
+public class EventBusBridgeUnsubscribeHandler extends EventBusBridgeHandlerBase<UnsubscribeOp, Empty> {
 
-  public static final ServiceMethod<UnsubscribeMessageRequest, Empty> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<UnsubscribeOp, Empty> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Unsubscribe",
     GrpcMessageEncoder.encoder(),
-    GrpcMessageDecoder.decoder(UnsubscribeMessageRequest.newBuilder()));
+    GrpcMessageDecoder.decoder(UnsubscribeOp.newBuilder()));
 
   public EventBusBridgeUnsubscribeHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
     super(bus, options, bridgeEventHandler, compiledREs);
   }
 
   @Override
-  public void handle(GrpcServerRequest<UnsubscribeMessageRequest, Empty> request) {
+  public void handle(GrpcServerRequest<UnsubscribeOp, Empty> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       String consumerId = eventRequest.getConsumer();
@@ -63,7 +63,7 @@ public class EventBusBridgeUnsubscribeHandler extends EventBusBridgeHandlerBase<
   }
 
   @Override
-  protected JsonObject createEvent(String type, UnsubscribeMessageRequest request) {
+  protected JsonObject createEvent(String type, UnsubscribeOp request) {
     JsonObject event = new JsonObject().put("type", type);
 
     if (request == null) {

@@ -42,13 +42,13 @@ The service definition includes the following operations:
 
 The message structures are defined as follows:
 
-=== PublishMessageRequest
+=== PublishOp
 
 Used for publishing messages to an address:
 
 [source,proto]
 ----
-message PublishMessageRequest {
+message PublishOp {
   // The address the message was sent to
   string address = 1;
 
@@ -60,13 +60,13 @@ message PublishMessageRequest {
 }
 ----
 
-=== SendMessageRequest
+=== SendOp
 
 Used for sending messages to an address (point-to-point):
 
 [source,proto]
 ----
-message SendMessageRequest {
+message SendOp {
   // The address the message was sent to
   string address = 1;
 
@@ -84,13 +84,13 @@ message SendMessageRequest {
 }
 ----
 
-=== RequestMessageRequest
+=== RequestOp
 
 Used for request-reply pattern:
 
 [source,proto]
 ----
-message RequestMessageRequest {
+message RequestOp {
   // The address the message was sent to
   string address = 1;
 
@@ -108,13 +108,13 @@ message RequestMessageRequest {
 }
 ----
 
-=== SubscribeMessageRequest
+=== SubscribeOp
 
 Used for subscribing to an address:
 
 [source,proto]
 ----
-message SubscribeMessageRequest {
+message SubscribeOp {
   // The address to subscribe to
   string address = 1;
 
@@ -126,13 +126,13 @@ message SubscribeMessageRequest {
 }
 ----
 
-=== UnsubscribeMessageRequest
+=== UnsubscribeOp
 
 Used for unsubscribing from an address:
 
 [source,proto]
 ----
-message UnsubscribeMessageRequest {
+message UnsubscribeOp {
   // The address to unsubscribe from
   string address = 1;
 
@@ -141,13 +141,13 @@ message UnsubscribeMessageRequest {
 }
 ----
 
-=== EventMessage
+=== EventBusMessage
 
 Used for receiving messages from the EventBus:
 
 [source,proto]
 ----
-message EventMessage {
+message EventBusMessage {
   // The address the message was sent to
   string address = 1;
 

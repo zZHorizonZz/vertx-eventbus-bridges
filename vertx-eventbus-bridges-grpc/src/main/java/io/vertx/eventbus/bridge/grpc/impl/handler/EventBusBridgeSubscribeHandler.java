@@ -11,8 +11,8 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.SubscribeMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.SubscribeOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.HashMap;
@@ -21,20 +21,20 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<SubscribeMessageRequest, EventMessage> {
+public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<SubscribeOp, EventBusMessage> {
 
-  public static final ServiceMethod<SubscribeMessageRequest, EventMessage> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<SubscribeOp, EventBusMessage> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Subscribe",
     GrpcMessageEncoder.encoder(),
-    GrpcMessageDecoder.decoder(SubscribeMessageRequest.newBuilder()));
+    GrpcMessageDecoder.decoder(SubscribeOp.newBuilder()));
 
   public EventBusBridgeSubscribeHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
     super(bus, options, bridgeEventHandler, compiledREs);
   }
 
   @Override
-  public void handle(GrpcServerRequest<SubscribeMessageRequest, EventMessage> request) {
+  public void handle(GrpcServerRequest<SubscribeOp, EventBusMessage> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       if (address.isEmpty()) {
@@ -66,7 +66,7 @@ public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<Su
   }
 
   @Override
-  protected JsonObject createEvent(String type, SubscribeMessageRequest request) {
+  protected JsonObject createEvent(String type, SubscribeOp request) {
     JsonObject event = new JsonObject().put("type", type);
 
     if (request == null) {
@@ -94,11 +94,11 @@ public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<Su
   }
 
   static final class BridgeMessageConsumer implements Handler<Message<Object>> {
-    private final GrpcServerRequest<SubscribeMessageRequest, EventMessage> request;
+    private final GrpcServerRequest<SubscribeOp, EventBusMessage> request;
     private final String address;
     private final String consumerId;
 
-    BridgeMessageConsumer(GrpcServerRequest<SubscribeMessageRequest, EventMessage> request, String address, String consumerId) {
+    BridgeMessageConsumer(GrpcServerRequest<SubscribeOp, EventBusMessage> request, String address, String consumerId) {
       this.request = request;
       this.address = address;
       this.consumerId = consumerId;
@@ -121,7 +121,7 @@ public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<Su
         body = jsonToProto(new JsonObject().put("value", String.valueOf(message.body())), Struct.newBuilder());
       }
 
-      EventMessage response = EventMessage.newBuilder()
+      EventBusMessage response = EventBusMessage.newBuilder()
         .setAddress(address)
         .setConsumer(consumerId)
         .putAllHeaders(responseHeaders)

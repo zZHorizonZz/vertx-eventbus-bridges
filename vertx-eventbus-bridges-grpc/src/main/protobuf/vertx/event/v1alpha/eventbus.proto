@@ -13,26 +13,26 @@ option java_outer_classname = "EventBusBridgeProto";
 
 service EventBusBridge {
   // Publish a message to an address
-  rpc Publish(PublishMessageRequest) returns (google.protobuf.Empty) {}
+  rpc Publish(PublishOp) returns (google.protobuf.Empty) {}
 
   // Send a message to an address (point-to-point)
-  rpc Send(SendMessageRequest) returns (EventMessage) {}
+  rpc Send(SendOp) returns (EventBusMessage) {}
 
   // Request-reply pattern
-  rpc Request(RequestMessageRequest) returns (EventMessage) {}
+  rpc Request(RequestOp) returns (EventBusMessage) {}
 
   // Subscribe to messages from an address
-  rpc Subscribe(SubscribeMessageRequest) returns (stream EventMessage) {}
+  rpc Subscribe(SubscribeOp) returns (stream EventBusMessage) {}
 
   // Unsubscribe from an address
-  rpc Unsubscribe(UnsubscribeMessageRequest) returns (google.protobuf.Empty) {}
+  rpc Unsubscribe(UnsubscribeOp) returns (google.protobuf.Empty) {}
 
   // Health check
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 // Message used for publishing to an address
-message PublishMessageRequest {
+message PublishOp {
   // The address the message was sent to
   string address = 1;
 
@@ -44,7 +44,7 @@ message PublishMessageRequest {
 }
 
 // Message used for sending to an address (point-to-point)
-message SendMessageRequest {
+message SendOp {
   // The address the message was sent to
   string address = 1;
 
@@ -62,7 +62,7 @@ message SendMessageRequest {
 }
 
 // Message used for request-reply pattern
-message RequestMessageRequest {
+message RequestOp {
   // The address the message was sent to
   string address = 1;
 
@@ -80,7 +80,7 @@ message RequestMessageRequest {
 }
 
 // Message used for subscribing to an address
-message SubscribeMessageRequest {
+message SubscribeOp {
   // The address to subscribe to
   string address = 1;
 
@@ -92,7 +92,7 @@ message SubscribeMessageRequest {
 }
 
 // Message used for unsubscribing from an address
-message UnsubscribeMessageRequest {
+message UnsubscribeOp {
   // The address to unsubscribe from
   string address = 1;
 
@@ -101,7 +101,7 @@ message UnsubscribeMessageRequest {
 }
 
 // Message received from the event bus
-message EventMessage {
+message EventBusMessage {
   // The address the message was sent to
   string address = 1;
 

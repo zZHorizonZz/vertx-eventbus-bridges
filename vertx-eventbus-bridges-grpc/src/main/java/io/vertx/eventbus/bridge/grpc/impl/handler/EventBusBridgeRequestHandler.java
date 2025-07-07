@@ -11,28 +11,28 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.RequestMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.RequestOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgeRequestHandler extends EventBusBridgeHandlerBase<RequestMessageRequest, EventMessage> {
+public class EventBusBridgeRequestHandler extends EventBusBridgeHandlerBase<RequestOp, EventBusMessage> {
 
-  public static final ServiceMethod<RequestMessageRequest, EventMessage> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<RequestOp, EventBusMessage> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Request",
     GrpcMessageEncoder.encoder(),
-    GrpcMessageDecoder.decoder(RequestMessageRequest.newBuilder()));
+    GrpcMessageDecoder.decoder(RequestOp.newBuilder()));
 
   public EventBusBridgeRequestHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
     super(bus, options, bridgeEventHandler, compiledREs);
   }
 
   @Override
-  public void handle(GrpcServerRequest<RequestMessageRequest, EventMessage> request) {
+  public void handle(GrpcServerRequest<RequestOp, EventBusMessage> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       if (address.isEmpty()) {
@@ -73,7 +73,7 @@ public class EventBusBridgeRequestHandler extends EventBusBridgeHandlerBase<Requ
                 replyBody = jsonToProto(new JsonObject().put("value", String.valueOf(reply.body())), Struct.newBuilder());
               }
 
-              EventMessage response = EventMessage.newBuilder()
+              EventBusMessage response = EventBusMessage.newBuilder()
                 .putAllHeaders(responseHeaders)
                 .setBody(replyBody)
                 .build();
@@ -81,7 +81,7 @@ public class EventBusBridgeRequestHandler extends EventBusBridgeHandlerBase<Requ
               request.response().end(response);
             })
             .onFailure(err -> {
-              EventMessage response = handleErrorAndCreateResponse(err);
+              EventBusMessage response = handleErrorAndCreateResponse(err);
               request.response().end(response);
             });
         },
@@ -90,7 +90,7 @@ public class EventBusBridgeRequestHandler extends EventBusBridgeHandlerBase<Requ
   }
 
   @Override
-  protected JsonObject createEvent(String type, RequestMessageRequest request) {
+  protected JsonObject createEvent(String type, RequestOp request) {
     JsonObject event = new JsonObject().put("type", type);
 
     if (request == null) {

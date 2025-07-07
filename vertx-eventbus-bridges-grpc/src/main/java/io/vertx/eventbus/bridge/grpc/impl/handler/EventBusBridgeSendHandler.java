@@ -9,27 +9,27 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.EventMessage;
-import io.vertx.grpc.event.v1alpha.SendMessageRequest;
+import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.SendOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendMessageRequest, EventMessage> {
+public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendOp, EventBusMessage> {
 
-  public static final ServiceMethod<SendMessageRequest, EventMessage> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<SendOp, EventBusMessage> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Send",
     GrpcMessageEncoder.encoder(),
-    GrpcMessageDecoder.decoder(SendMessageRequest.newBuilder()));
+    GrpcMessageDecoder.decoder(SendOp.newBuilder()));
 
   public EventBusBridgeSendHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
     super(bus, options, bridgeEventHandler, compiledREs);
   }
 
   @Override
-  public void handle(GrpcServerRequest<SendMessageRequest, EventMessage> request) {
+  public void handle(GrpcServerRequest<SendOp, EventBusMessage> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       if (address.isEmpty()) {
@@ -56,15 +56,15 @@ public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendMes
                   replies.put(reply.replyAddress(), reply);
                 }
 
-                request.response().end(EventMessage.getDefaultInstance());
+                request.response().end(EventBusMessage.getDefaultInstance());
               })
               .onFailure(err -> {
-                EventMessage response = handleErrorAndCreateResponse(err);
+                EventBusMessage response = handleErrorAndCreateResponse(err);
                 request.response().end(response);
               });
           } else {
             bus.send(address, body, deliveryOptions);
-            request.response().end(EventMessage.getDefaultInstance());
+            request.response().end(EventBusMessage.getDefaultInstance());
           }
         },
         () -> replyStatus(request, GrpcStatus.PERMISSION_DENIED));
@@ -72,7 +72,7 @@ public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendMes
   }
 
   @Override
-  protected JsonObject createEvent(String type, SendMessageRequest request) {
+  protected JsonObject createEvent(String type, SendOp request) {
     JsonObject event = new JsonObject().put("type", type);
 
     if (request == null) {

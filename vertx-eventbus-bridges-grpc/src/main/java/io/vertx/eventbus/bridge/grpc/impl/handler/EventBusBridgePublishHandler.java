@@ -10,26 +10,26 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.PublishMessageRequest;
+import io.vertx.grpc.event.v1alpha.PublishOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgePublishHandler extends EventBusBridgeHandlerBase<PublishMessageRequest, Empty> {
+public class EventBusBridgePublishHandler extends EventBusBridgeHandlerBase<PublishOp, Empty> {
 
-  public static final ServiceMethod<PublishMessageRequest, Empty> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<PublishOp, Empty> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Publish",
     GrpcMessageEncoder.encoder(),
-    GrpcMessageDecoder.decoder(PublishMessageRequest.newBuilder()));
+    GrpcMessageDecoder.decoder(PublishOp.newBuilder()));
 
   public EventBusBridgePublishHandler(EventBus bus, BridgeOptions options, Handler<BridgeEvent> bridgeEventHandler, Map<String, Pattern> compiledREs) {
     super(bus, options, bridgeEventHandler, compiledREs);
   }
 
   @Override
-  public void handle(GrpcServerRequest<PublishMessageRequest, Empty> request) {
+  public void handle(GrpcServerRequest<PublishOp, Empty> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       if (address.isEmpty()) {
@@ -56,7 +56,7 @@ public class EventBusBridgePublishHandler extends EventBusBridgeHandlerBase<Publ
   }
 
   @Override
-  protected JsonObject createEvent(String type, PublishMessageRequest request) {
+  protected JsonObject createEvent(String type, PublishOp request) {
     JsonObject event = new JsonObject().put("type", type);
 
     if (request == null) {
