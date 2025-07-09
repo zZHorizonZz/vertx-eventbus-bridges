@@ -3,6 +3,7 @@ package examples.grpc;
 import com.google.protobuf.Duration;
 import com.google.protobuf.Empty;
 import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SocketAddress;
@@ -11,15 +12,9 @@ import io.vertx.eventbus.bridge.grpc.GrpcEventBusBridge;
 import io.vertx.eventbus.bridge.grpc.GrpcEventBusBridgeService;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.grpc.event.v1alpha.*;
 import io.vertx.grpc.server.GrpcServer;
 import io.vertx.grpc.client.GrpcClient;
-import io.vertx.grpc.event.v1alpha.EventBusBridgeGrpcClient;
-import io.vertx.grpc.event.v1alpha.EventBusMessage;
-import io.vertx.grpc.event.v1alpha.PublishOp;
-import io.vertx.grpc.event.v1alpha.RequestOp;
-import io.vertx.grpc.event.v1alpha.SendOp;
-import io.vertx.grpc.event.v1alpha.SubscribeOp;
-import io.vertx.grpc.event.v1alpha.UnsubscribeOp;
 
 public class GrpcBridgeExamples {
 
@@ -64,7 +59,7 @@ public class GrpcBridgeExamples {
     JsonObject message = new JsonObject().put("value", "Hello from gRPC client");
 
     // Convert to Protobuf Struct
-    Struct messageBody = jsonToStruct(message);
+    JsonPayload messageBody = toJsonPayload(message);
 
     // Create the request
     SendOp request = SendOp.newBuilder()
@@ -87,7 +82,7 @@ public class GrpcBridgeExamples {
     JsonObject message = new JsonObject().put("value", "Hello from gRPC client");
 
     // Convert to Protobuf Struct
-    Struct messageBody = jsonToStruct(message);
+    JsonPayload messageBody = toJsonPayload(message);
 
     // Create the request with timeout
     RequestOp request = RequestOp.newBuilder()
@@ -114,7 +109,7 @@ public class GrpcBridgeExamples {
     JsonObject message = new JsonObject().put("value", "Broadcast message");
 
     // Convert to Protobuf Struct
-    Struct messageBody = jsonToStruct(message);
+    JsonPayload messageBody = toJsonPayload(message);
 
     // Create the request
     PublishOp request = PublishOp.newBuilder()
@@ -198,13 +193,13 @@ public class GrpcBridgeExamples {
   }
 
   // Helper methods for JSON <-> Struct conversion
-  private Struct jsonToStruct(JsonObject json) {
+  private JsonPayload toJsonPayload(JsonObject json) {
     // This is a placeholder for the actual conversion method
     // In a real implementation, you would convert JsonObject to Protobuf Struct
-    return Struct.getDefaultInstance();
+    return JsonPayload.getDefaultInstance();
   }
 
-  private JsonObject structToJson(Struct struct) {
+  private JsonObject structToJson(Value struct) {
     // This is a placeholder for the actual conversion method
     // In a real implementation, you would convert Protobuf Struct to JsonObject
     return new JsonObject();

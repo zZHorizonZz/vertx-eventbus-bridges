@@ -16,7 +16,7 @@ service EventBusBridge {
   rpc Publish(PublishOp) returns (google.protobuf.Empty) {}
 
   // Send a message to an address (point-to-point)
-  rpc Send(SendOp) returns (EventBusMessage) {}
+  rpc Send(SendOp) returns (google.protobuf.Empty) {}
 
   // Request-reply pattern
   rpc Request(RequestOp) returns (EventBusMessage) {}
@@ -39,8 +39,8 @@ message PublishOp {
   // Message headers
   map<string, string> headers = 2;
 
-  // Message payload as structured data
-  google.protobuf.Struct body = 3;
+  // Message payload
+  JsonPayload body = 3;
 }
 
 // Message used for sending to an address (point-to-point)
@@ -54,8 +54,8 @@ message SendOp {
   // Message headers
   map<string, string> headers = 3;
 
-  // Message payload as structured data
-  google.protobuf.Struct body = 4;
+  // Message payload
+  JsonPayload body = 4;
 
   // Timeout in milliseconds
   google.protobuf.Duration timeout = 5;
@@ -72,8 +72,8 @@ message RequestOp {
   // Message headers
   map<string, string> headers = 3;
 
-  // Message payload as structured data
-  google.protobuf.Struct body = 4;
+  // Message payload
+  JsonPayload body = 4;
 
   // Timeout in milliseconds
   google.protobuf.Duration timeout = 5;
@@ -115,8 +115,16 @@ message EventBusMessage {
   map<string, string> headers = 4;
 
   // Message payload
-  google.protobuf.Struct body = 5;
+  google.protobuf.Value body = 5;
 
   // Optional status for error responses
   google.rpc.Status status = 6;
+}
+
+message JsonPayload {
+  oneof body {
+    google.protobuf.Value proto_body = 1;
+    bytes binary_body = 2;
+    string text_body = 3;
+  }
 }

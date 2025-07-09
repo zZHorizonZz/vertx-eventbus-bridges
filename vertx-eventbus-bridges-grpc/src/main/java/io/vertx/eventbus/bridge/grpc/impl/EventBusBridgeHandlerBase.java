@@ -1,9 +1,10 @@
 package io.vertx.eventbus.bridge.grpc.impl;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.Value;
 import com.google.protobuf.util.JsonFormat;
 import com.google.rpc.Status;
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -15,6 +16,7 @@ import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.grpc.common.GrpcStatus;
 import io.vertx.grpc.event.v1alpha.EventBusMessage;
+import io.vertx.grpc.event.v1alpha.JsonPayload;
 import io.vertx.grpc.event.v1alpha.SubscribeOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
@@ -52,19 +54,34 @@ public abstract class EventBusBridgeHandlerBase<Req, Resp> implements Handler<Gr
    *
    * This method uses the Protocol Buffers JSON format to convert the message to a JSON string, then parses that string into a Vert.x JsonObject.
    *
-   * @param message the Protocol Buffers message to convert
+   * @param payload a {@link JsonPayload} to convert
    * @return a JSON object representing the message
    */
-  protected static JsonObject protoToJson(Message message) {
-    JsonObject json = new JsonObject();
-    try {
-      String jsonString = JsonFormat.printer().print(message);
-      json = new JsonObject(jsonString);
-    } catch (Exception e) {
-      // Silently handle exception and return empty JSON object
-      // This could be improved with logging
+  protected static JsonObject protoToJson(JsonPayload payload) {
+    if (payload == null) {
+      return new JsonObject();
     }
-    return json;
+
+    switch (payload.getBodyCase()) {
+      case TEXT_BODY:
+        return new JsonObject(payload.getTextBody());
+      case BINARY_BODY:
+        return new JsonObject(Buffer.buffer(payload.getBinaryBody().toByteArray()));
+      case PROTO_BODY: {
+        JsonObject json = new JsonObject();
+
+        try {
+          String jsonString = JsonFormat.printer().print(payload.getProtoBody());
+          json = new JsonObject(jsonString);
+        } catch (Exception ignored) {
+
+        }
+
+        return json;
+      }
+      default:
+        throw new IllegalArgumentException("Invalid payload body case: " + payload.getBodyCase());
+    }
   }
 
   /**
@@ -73,19 +90,18 @@ public abstract class EventBusBridgeHandlerBase<Req, Resp> implements Handler<Gr
    * This method uses the Protocol Buffers JSON format to parse the JSON object into a Protocol Buffers message of the specified type.
    *
    * @param json the JSON object to convert
-   * @param builder the builder for the target Protocol Buffers message type
-   * @param <T> the type of the Protocol Buffers message
    * @return a Protocol Buffers message representing the JSON object
    */
-  @SuppressWarnings("unchecked")
-  protected static <T extends Message> T jsonToProto(JsonObject json, Message.Builder builder) {
+  protected static Value jsonToProto(JsonObject json) {
+    Value.Builder builder = Value.newBuilder();
+
     try {
       JsonFormat.parser().merge(json.encode(), builder);
-    } catch (Exception e) {
-      // Silently handle exception and return message with default values
-      // This could be improved with logging
+    } catch (Exception ignored) {
+
     }
-    return (T) builder.build();
+
+    return builder.build();
   }
 
   /**

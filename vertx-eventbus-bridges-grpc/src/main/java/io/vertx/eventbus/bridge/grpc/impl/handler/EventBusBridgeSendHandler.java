@@ -1,5 +1,6 @@
 package io.vertx.eventbus.bridge.grpc.impl.handler;
 
+import com.google.protobuf.Empty;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -9,16 +10,15 @@ import io.vertx.eventbus.bridge.grpc.impl.EventBusBridgeHandlerBase;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.BridgeOptions;
 import io.vertx.grpc.common.*;
-import io.vertx.grpc.event.v1alpha.EventBusMessage;
 import io.vertx.grpc.event.v1alpha.SendOp;
 import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendOp, EventBusMessage> {
+public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendOp, Empty> {
 
-  public static final ServiceMethod<SendOp, EventBusMessage> SERVICE_METHOD = ServiceMethod.server(
+  public static final ServiceMethod<SendOp, Empty> SERVICE_METHOD = ServiceMethod.server(
     ServiceName.create("vertx.event.v1alpha.EventBusBridge"),
     "Send",
     GrpcMessageEncoder.encoder(),
@@ -29,7 +29,7 @@ public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendOp,
   }
 
   @Override
-  public void handle(GrpcServerRequest<SendOp, EventBusMessage> request) {
+  public void handle(GrpcServerRequest<SendOp, Empty> request) {
     request.handler(eventRequest -> {
       String address = eventRequest.getAddress();
       if (address.isEmpty()) {
@@ -56,15 +56,14 @@ public class EventBusBridgeSendHandler extends EventBusBridgeHandlerBase<SendOp,
                   replies.put(reply.replyAddress(), reply);
                 }
 
-                request.response().end(EventBusMessage.getDefaultInstance());
+                request.response().end(Empty.getDefaultInstance());
               })
               .onFailure(err -> {
-                EventBusMessage response = handleErrorAndCreateResponse(err);
-                request.response().end(response);
+                replyStatus(request, GrpcStatus.INTERNAL, err.getMessage());
               });
           } else {
             bus.send(address, body, deliveryOptions);
-            request.response().end(EventBusMessage.getDefaultInstance());
+            request.response().end(Empty.getDefaultInstance());
           }
         },
         () -> replyStatus(request, GrpcStatus.PERMISSION_DENIED));

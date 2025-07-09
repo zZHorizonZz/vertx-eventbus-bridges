@@ -1,7 +1,7 @@
 package io.vertx.tests.eventbus.bridge.grpc;
 
-import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
+import com.google.protobuf.util.JsonFormat;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
@@ -13,6 +13,7 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.grpc.event.v1alpha.JsonPayload;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -25,63 +26,42 @@ public abstract class GrpcEventBusBridgeTestBase {
   protected volatile Handler<BridgeEvent> eventHandler = event -> event.complete(true);
 
   /**
-   * Convert a JsonObject to a Protobuf Struct
-   * TODO: In the future we should use a proper conversion implemented directly to Vert.x?
+   * Convert a JsonObject to a JsonPayload
    */
-  public static Struct jsonToStruct(JsonObject json) {
+  public static JsonPayload jsonToPayload(JsonObject json) {
     if (json == null) {
-      return Struct.getDefaultInstance();
+      return JsonPayload.newBuilder().build();
     }
 
-    Struct.Builder structBuilder = Struct.newBuilder();
-    for (String fieldName : json.fieldNames()) {
-      Object value = json.getValue(fieldName);
-      if (value == null) {
-        structBuilder.putFields(fieldName, Value.newBuilder().setNullValue(com.google.protobuf.NullValue.NULL_VALUE).build());
-      } else if (value instanceof String) {
-        structBuilder.putFields(fieldName, Value.newBuilder().setStringValue((String) value).build());
-      } else if (value instanceof Number) {
-        structBuilder.putFields(fieldName, Value.newBuilder().setNumberValue(((Number) value).doubleValue()).build());
-      } else if (value instanceof Boolean) {
-        structBuilder.putFields(fieldName, Value.newBuilder().setBoolValue((Boolean) value).build());
-      } else if (value instanceof JsonObject) {
-        structBuilder.putFields(fieldName, Value.newBuilder().setStructValue(jsonToStruct((JsonObject) value)).build());
-      }
+    Value.Builder valueBuilder = Value.newBuilder();
+
+    try {
+      JsonFormat.parser().merge(json.encode(), valueBuilder);
+    } catch (Exception e) {
+      // If parsing fails, fallback to empty value
+      valueBuilder.clear();
     }
-    return structBuilder.build();
+
+    return JsonPayload.newBuilder()
+      .setProtoBody(valueBuilder.build())
+      .build();
   }
 
   /**
-   * Convert a Protobuf Struct to a JsonObject
-   * TODO: In the future we should use a proper conversion implemented directly to Vert.x?
+   * Convert a Protobuf Value to a JsonObject
    */
-  public static JsonObject structToJson(Struct struct) {
-    if (struct == null) {
+  public static JsonObject valueToJson(Value value) {
+    if (value == null) {
       return new JsonObject();
     }
 
     JsonObject json = new JsonObject();
-    struct.getFieldsMap().forEach((key, value) -> {
-      switch (value.getKindCase()) {
-        case NULL_VALUE:
-          json.putNull(key);
-          break;
-        case NUMBER_VALUE:
-          json.put(key, value.getNumberValue());
-          break;
-        case STRING_VALUE:
-          json.put(key, value.getStringValue());
-          break;
-        case BOOL_VALUE:
-          json.put(key, value.getBoolValue());
-          break;
-        case STRUCT_VALUE:
-          json.put(key, structToJson(value.getStructValue()));
-          break;
-        default:
-          break;
-      }
-    });
+    try {
+      String jsonString = JsonFormat.printer().print(value);
+      json = new JsonObject(jsonString);
+    } catch (Exception e) {
+      // If parsing fails, return empty object
+    }
     return json;
   }
 
@@ -101,9 +81,11 @@ public abstract class GrpcEventBusBridgeTestBase {
         .addInboundPermitted(new PermittedOptions().setAddress("hello"))
         .addInboundPermitted(new PermittedOptions().setAddress("echo"))
         .addInboundPermitted(new PermittedOptions().setAddress("test"))
+        .addInboundPermitted(new PermittedOptions().setAddress("complex-ping"))
         .addOutboundPermitted(new PermittedOptions().setAddress("echo"))
         .addOutboundPermitted(new PermittedOptions().setAddress("test"))
-        .addOutboundPermitted(new PermittedOptions().setAddress("ping")),
+        .addOutboundPermitted(new PermittedOptions().setAddress("ping"))
+        .addOutboundPermitted(new PermittedOptions().setAddress("complex-ping")),
       7000,
       event -> eventHandler.handle(event));
 

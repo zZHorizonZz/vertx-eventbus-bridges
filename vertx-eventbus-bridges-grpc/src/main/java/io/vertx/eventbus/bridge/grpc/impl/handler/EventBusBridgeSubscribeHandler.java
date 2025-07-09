@@ -1,6 +1,6 @@
 package io.vertx.eventbus.bridge.grpc.impl.handler;
 
-import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -111,14 +111,14 @@ public class EventBusBridgeSubscribeHandler extends EventBusBridgeHandlerBase<Su
         responseHeaders.put(entry.getKey(), entry.getValue());
       }
 
-      Struct body;
+      Value body;
 
       if (message.body() instanceof JsonObject) {
-        body = jsonToProto((JsonObject) message.body(), Struct.newBuilder());
+        body = jsonToProto((JsonObject) message.body());
       } else if (message.body() instanceof String) {
-        body = jsonToProto(new JsonObject(String.valueOf(message.body())), Struct.newBuilder());
+        body = jsonToProto(new JsonObject(String.valueOf(message.body())));
       } else {
-        body = jsonToProto(new JsonObject().put("value", String.valueOf(message.body())), Struct.newBuilder());
+        body = jsonToProto(new JsonObject().put("value", String.valueOf(message.body())));
       }
 
       EventBusMessage response = EventBusMessage.newBuilder()

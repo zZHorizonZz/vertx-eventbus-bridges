@@ -192,7 +192,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
 
     RequestOp request = RequestOp.newBuilder()
       .setAddress(address)
-      .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
+      .setBody(GrpcEventBusBridgeTestBase.jsonToPayload(message))
       .setTimeout(Durations.fromMillis(timeout))
       .build();
 
@@ -220,7 +220,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
                   len = trailer.getInt(1);
                   assertEquals(STATUS_OK, trailer.getBuffer(PREFIX_SIZE, PREFIX_SIZE + len).toString());
 
-                  promise.complete(GrpcEventBusBridgeTestBase.structToJson(eventMessage.getBody()));
+                  promise.complete(GrpcEventBusBridgeTestBase.valueToJson(eventMessage.getBody()));
                 } catch (Exception e) {
                   promise.fail("Failed to parse response: " + e.getMessage());
                 }
@@ -242,7 +242,7 @@ public class GrpcEventBusWebTest extends GrpcEventBusBridgeTestBase {
 
     PublishOp request = PublishOp.newBuilder()
       .setAddress(address)
-      .setBody(GrpcEventBusBridgeTestBase.jsonToStruct(message))
+      .setBody(GrpcEventBusBridgeTestBase.jsonToPayload(message))
       .build();
 
     client.request(HttpMethod.POST, "/vertx.event.v1alpha.EventBusBridge/Publish").compose(httpRequest -> {
